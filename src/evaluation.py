@@ -14,7 +14,10 @@ class Evaluation:
 
         material = 0
         psqt = 0
+
+        # loop over all set bits
         while occupied:
+            # find the least significant bit
             square = lsb(occupied)
 
             piece = board.piece_type_at(square)

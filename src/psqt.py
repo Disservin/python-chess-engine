@@ -11,6 +11,10 @@ piece_values = {
     chess.KING: 10000,
 }
 
+"""
+These PSQT are taken from https://www.chessprogramming.org/Simplified_Evaluation_Function
+and are more or less widely used in beginner chess engines.
+"""
 psqt_values = {
     chess.PAWN: [
     0,  0,  0,  0,  0,  0,  0,  0,

@@ -14,6 +14,7 @@ VALUE_TB_WIN_IN_MAX_PLY = VALUE_TB_WIN - MAX_PLY
 VALUE_TB_LOSS_IN_MAX_PLY = -VALUE_TB_WIN_IN_MAX_PLY
 
 
+# least significant bit
 def lsb(x):
     return (x & -x).bit_length() - 1
 
