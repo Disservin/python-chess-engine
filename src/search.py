@@ -48,8 +48,6 @@ class Search:
         if bestValue > alpha:
             alpha = bestValue
 
-        # moves = list(self.board.generate_legal_captures())
-
         moves = sorted(
             self.board.generate_legal_captures(),
             key=lambda move: self.scoreQMove(move),
