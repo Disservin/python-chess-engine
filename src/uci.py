@@ -17,7 +17,7 @@ class UCI:
         self.search = Search.Search(self.board)
         self.thread = None
 
-    def output(self, s):
+    def output(self, s) -> None:
         self.out.write(str(s) + "\n")
         self.out.flush()
 

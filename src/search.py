@@ -252,7 +252,7 @@ class Search:
         stdout.flush()
 
     # Detect a repetition
-    def isRepetition(self, key: int, draw: int = 1):
+    def isRepetition(self, key: int, draw: int = 1) -> bool:
         count = 0
         size = len(self.hashHistory)
 
@@ -266,7 +266,7 @@ class Search:
         return False
 
     # Most Valuable Victim - Least Valuable Aggressor
-    def mvvlva(self, move):
+    def mvvlva(self, move: chess.Move) -> int:
         mvvlva = [
             [0, 0, 0, 0, 0, 0, 0],
             [0, 105.0, 104.0, 103.0, 102.0, 101.0, 100.0],
@@ -288,11 +288,11 @@ class Search:
         return mvvlva[victim][attacker]
 
     # assign a score to moves in qsearch
-    def scoreQMove(self, move: chess.Move):
+    def scoreQMove(self, move: chess.Move) -> int:
         return self.mvvlva(move)
 
     # assign a score to normal moves
-    def scoreMove(self, move: chess.Move, ttMove: chess.Move):
+    def scoreMove(self, move: chess.Move, ttMove: chess.Move) -> int:
         if move == ttMove:
             return 1_000_000
         elif self.board.is_capture(move):
@@ -300,7 +300,7 @@ class Search:
             return 32_000 + self.mvvlva(move)
         return self.htable[self.board.turn][move.from_square][move.to_square]
 
-    def getHash(self):
+    def getHash(self) -> int:
         return chess.polyglot.zobrist_hash(self.board)
 
     def checkTime(self, iter: bool = False) -> bool:
@@ -369,7 +369,7 @@ class Search:
         return info
 
     # Reset search stuff
-    def reset(self):
+    def reset(self) -> None:
         self.pvLength[0] = 0
         self.nodes = 0
         self.t0 = 0

@@ -1,7 +1,7 @@
 import uci
 
 
-def main():
+def main() -> None:
     uciLoop = uci.UCI()
 
     while True:

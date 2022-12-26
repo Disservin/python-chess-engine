@@ -6,9 +6,6 @@ import chess
 
 
 class Evaluation:
-    def __init__(self) -> None:
-        pass
-
     def eval_side(self, board: chess.Board, color: chess.Color) -> int:
         occupied = board.occupied_co[color]
 
@@ -33,5 +30,5 @@ class Evaluation:
 
         return material + psqt
 
-    def evaluate(self, board: chess.Board):
+    def evaluate(self, board: chess.Board) -> int:
         return self.eval_side(board, board.turn) - self.eval_side(board, not board.turn)

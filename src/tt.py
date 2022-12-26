@@ -25,7 +25,7 @@ class TranspositionTable:
         return key % self.tt_size
 
     # if we want to save correct mate scores we have to adjust the distance
-    def scoreToTT(self, s: int, plies: int):
+    def scoreToTT(self, s: int, plies: int) -> int:
         if s >= VALUE_TB_WIN_IN_MAX_PLY:
             return s + plies
         else:
@@ -35,7 +35,7 @@ class TranspositionTable:
                 return s
 
     # undo the previous adjustment
-    def scoreFromTT(self, s: int, plies: int):
+    def scoreFromTT(self, s: int, plies: int) -> int:
         if s >= VALUE_TB_WIN_IN_MAX_PLY:
             return s - plies
         else:

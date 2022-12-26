@@ -15,11 +15,11 @@ VALUE_TB_LOSS_IN_MAX_PLY = -VALUE_TB_WIN_IN_MAX_PLY
 
 
 # least significant bit
-def lsb(x):
+def lsb(x: int) -> int:
     return (x & -x).bit_length() - 1
 
 
-def poplsb(x):
+def poplsb(x: int) -> int:
     x &= x - 1
     return x
 
