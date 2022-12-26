@@ -154,7 +154,9 @@ class Search:
             reverse=True,
         )
 
+        madeMoves = 0
         for move in moves:
+            madeMoves += 1
             self.nodes += 1
 
             self.board.push(move)
@@ -198,8 +200,11 @@ class Search:
                             ] += hhBonus
                         break
 
-        if len(moves) == 0:
-            return -VALUE_MATE + ply if self.board.is_check() else 0
+        if madeMoves == 0:
+            if inCheck:
+                return mated_in(ply)
+            else:
+                return 0
 
         bound = TT.Flag.NONEBOUND
 
@@ -339,11 +344,11 @@ class Search:
     def convert_score(self, score: int) -> str:
         if score >= VALUE_MATE_IN_PLY:
             return "mate " + str(
-                ((VALUE_MATE - score) / 2) + ((VALUE_MATE - score) & 1)
+                ((VALUE_MATE - score) // 2) + ((VALUE_MATE - score) & 1)
             )
         elif score <= VALUE_MATED_IN_PLY:
             return "mate " + str(
-                -((VALUE_MATE + score) / 2) + ((VALUE_MATE + score) & 1)
+                -((VALUE_MATE + score) // 2) + ((VALUE_MATE + score) & 1)
             )
         else:
             return "cp " + str(score)
