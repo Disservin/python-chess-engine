@@ -12,6 +12,14 @@ I tried to keep the code relatively small while create a working engine that fea
 
 It also features python type hints.
 
+### Run
+```
+python ./main.py
+```
+
 ### Executable
 
-On windows you can run the make-exe.bat which should create the engine in `./build`.
+On windows you can run `make-exe.bat` which should create the engine in `./build`.
+
+### Python Version
+Python 3.10+
