@@ -24,26 +24,6 @@ class TranspositionTable:
     def ttIndex(self, key: int) -> int:
         return key % self.tt_size
 
-    # if we want to save correct mate scores we have to adjust the distance
-    def scoreToTT(self, s: int, plies: int) -> int:
-        if s >= VALUE_TB_WIN_IN_MAX_PLY:
-            return s + plies
-        else:
-            if s <= VALUE_TB_LOSS_IN_MAX_PLY:
-                return s - plies
-            else:
-                return s
-
-    # undo the previous adjustment
-    def scoreFromTT(self, s: int, plies: int) -> int:
-        if s >= VALUE_TB_WIN_IN_MAX_PLY:
-            return s - plies
-        else:
-            if s <= VALUE_TB_LOSS_IN_MAX_PLY:
-                return s + plies
-            else:
-                return s
-
     def storeEntry(
         self, key: int, depth: int, flag: str, score: int, move: chess.Move, ply: int
     ) -> None:
@@ -65,3 +45,23 @@ class TranspositionTable:
         entry = self.transposition_table[index]
 
         return entry
+
+    # if we want to save correct mate scores we have to adjust the distance
+    def scoreToTT(self, s: int, plies: int) -> int:
+        if s >= VALUE_TB_WIN_IN_MAX_PLY:
+            return s + plies
+        else:
+            if s <= VALUE_TB_LOSS_IN_MAX_PLY:
+                return s - plies
+            else:
+                return s
+
+    # undo the previous adjustment
+    def scoreFromTT(self, s: int, plies: int) -> int:
+        if s >= VALUE_TB_WIN_IN_MAX_PLY:
+            return s - plies
+        else:
+            if s <= VALUE_TB_LOSS_IN_MAX_PLY:
+                return s + plies
+            else:
+                return s

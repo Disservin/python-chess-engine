@@ -18,14 +18,18 @@ class Evaluation:
             square = lsb(occupied)
 
             piece = board.piece_type_at(square)
+
+            # add material
             material += piece_values[piece]
 
+            # add piece square table value
             psqt += (
                 list(reversed(psqt_values[piece]))[square]
                 if color == chess.BLACK
                 else psqt_values[piece][square]
             )
 
+            # remove lsb
             occupied = poplsb(occupied)
 
         return material + psqt
