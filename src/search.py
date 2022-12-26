@@ -20,8 +20,7 @@ class Search:
         self.pvTable = [[chess.Move.null()] * MAX_PLY for _ in range(MAX_PLY)]
 
         self.nodes = 0
-        self.t0 = 0
-        self.t1 = 0
+        self.searchStartTime = 0
 
         self.limit = Limits(0, MAX_PLY, 0)
 
@@ -243,8 +242,8 @@ class Search:
             bestmove = self.pvTable[0][0]
 
             # print info
-            self.t1 = time.time_ns()
-            stdout.write(self.stats(d, score, self.t1 - self.t0) + "\n")
+            now = time.time_ns()
+            stdout.write(self.stats(d, score, now - self.t0) + "\n")
             stdout.flush()
 
         # last attempt to get a bestmove
@@ -376,7 +375,6 @@ class Search:
         self.pvLength[0] = 0
         self.nodes = 0
         self.t0 = 0
-        self.t1 = 0
         self.stop = False
         self.checks = CHECK_RATE
         self.hashHistory = []
