@@ -6,6 +6,12 @@ from enum import Enum
 
 Flag = Enum("Flag", ["NONEBOUND", "UPPERBOUND", "LOWERBOUND", "EXACTBOUND"])
 
+"""
+This is an entry in our TT, it saves
+information about the score, flag and most
+importantly the move.
+"""
+
 
 class TEntry:
     def __init__(self) -> None:
@@ -18,12 +24,15 @@ class TEntry:
 
 class TranspositionTable:
     def __init__(self) -> None:
+        # Higher values take rather long to initialize
         self.tt_size = 2**19 - 1
         self.transposition_table = [TEntry() for _ in range(self.tt_size)]
 
+    # Calculate "array" index
     def ttIndex(self, key: int) -> int:
         return key % self.tt_size
 
+    # store an entry in the TT
     def storeEntry(
         self, key: int, depth: int, flag: str, score: int, move: chess.Move, ply: int
     ) -> None:
@@ -39,6 +48,8 @@ class TranspositionTable:
             entry.score = self.scoreToTT(score, ply)
             entry.key = key
             entry.flag = flag
+
+        # self.transposition_table[index] = entry
 
     def probeEntry(self, key: int) -> TEntry:
         index = self.ttIndex(key)

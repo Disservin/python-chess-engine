@@ -11,7 +11,6 @@ import chess
 
 class UCI:
     def __init__(self) -> None:
-        self.options = []
         self.out = stdout
         self.board = chess.Board()
         self.search = Search.Search(self.board)

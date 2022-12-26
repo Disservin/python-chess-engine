@@ -1,6 +1,7 @@
 import time
 import tt as TT
 import evaluation as Eval
+import psqt as PQST
 
 # External
 import chess
@@ -36,9 +37,11 @@ class Search:
         if self.stop or self.checkTime():
             return 0
 
+        # Dont search higher than MAX_PLY
         if ply >= MAX_PLY:
             return self.eval.evaluate(self.board)
 
+        # staticEval
         bestValue = self.eval.evaluate(self.board)
 
         if bestValue >= beta:
@@ -47,6 +50,7 @@ class Search:
         if bestValue > alpha:
             alpha = bestValue
 
+        # Sort the moves, the highest score should come first
         moves = sorted(
             self.board.generate_legal_captures(),
             key=lambda move: self.scoreQMove(move),
@@ -55,10 +59,22 @@ class Search:
 
         for move in moves:
             self.nodes += 1
+
+            captured = self.board.piece_type_at(move.to_square)
+
+            # Delta Pruning
+            if (
+                PQST.piece_values[captured] + 400 + bestValue < alpha
+                and not move.promotion
+            ):
+                continue
+
+            # Make move
             self.board.push(move)
 
             score = -self.qsearch(-beta, -alpha, ply + 1)
 
+            # Unmake move
             self.board.pop()
 
             if score > bestValue:
@@ -76,6 +92,7 @@ class Search:
         if self.checkTime():
             return 0
 
+        # Dont search higher than MAX_PLY
         if ply >= MAX_PLY:
             return self.eval.evaluate(self.board)
 
@@ -107,6 +124,7 @@ class Search:
         ttHit = hashKey == tte.key
         ttMove = tte.move if ttHit else chess.Move.null()
 
+        # Adjust score
         ttScore = (
             self.transposition_table.scoreFromTT(tte.score, ply)
             if ttHit
@@ -144,23 +162,27 @@ class Search:
         oldAlpha = alpha
         bestScore = -VALUE_INFINITE
         bestMove = chess.Move.null()
+        madeMoves = 0
 
+        # Sort the moves, the highest score should come first
         moves = sorted(
             self.board.legal_moves,
             key=lambda move: self.scoreMove(move, ttMove),
             reverse=True,
         )
 
-        madeMoves = 0
         for move in moves:
             madeMoves += 1
             self.nodes += 1
 
+            # Make move
             self.board.push(move)
             self.hashHistory.append(hashKey)
 
+            # Search
             score = -self.absearch(-beta, -alpha, depth - 1, ply + 1)
 
+            # Unmake move
             self.board.pop()
             self.hashHistory.pop()
 
@@ -177,6 +199,7 @@ class Search:
                 self.pvLength[ply] = self.pvLength[ply + 1]
 
                 if score > alpha:
+                    # update alpha!
                     alpha = score
 
                     if score >= beta:
@@ -197,11 +220,14 @@ class Search:
                             ] += hhBonus
                         break
 
+        # No moves were played so its checkmate or stalemate
         if madeMoves == 0:
             if inCheck:
                 return mated_in(ply)
             else:
                 return 0
+
+        # Calculate bound and save position in TT
 
         bound = TT.Flag.NONEBOUND
 
@@ -231,6 +257,7 @@ class Search:
         # Start measuring time
         self.t0 = time.time_ns()
 
+        # Iterative Deepening Loop
         for d in range(1, self.limit.limited["depth"] + 1):
             score = self.absearch(-VALUE_INFINITE, VALUE_INFINITE, d, 0)
 
@@ -250,6 +277,7 @@ class Search:
         if bestmove == chess.Move.null():
             bestmove = self.pvTable[0][0]
 
+        # print bestmove
         stdout.write("bestmove " + str(bestmove) + "\n")
         stdout.flush()
 
@@ -379,3 +407,13 @@ class Search:
         self.checks = CHECK_RATE
         self.hashHistory = []
         self.htable = [[[0 for x in range(64)] for y in range(64)] for z in range(2)]
+
+
+# Run search.py instead of main.py if you want to profile it!
+if __name__ == "__main__":
+    board = chess.Board()
+    search = Search(board)
+
+    search.limit.limited["depth"] = 6
+
+    search.iterativeDeepening()
