@@ -105,10 +105,16 @@ class UCI:
                         limits.limited[limit] = int(splitted[splitted.index(limit) + 1])
 
                 ourTimeStr = "wtime" if self.board.turn == chess.WHITE else "btime"
+                ourTimeIncStr = "winc" if self.board.turn == chess.WHITE else "binc"
 
                 if ourTimeStr in input:
-                    limits.limited["time"] = int(
-                        splitted[splitted.index(ourTimeStr) + 1]
+                    limits.limited["time"] = (
+                        int(splitted[splitted.index(ourTimeStr) + 1]) / 20
+                    )
+
+                if ourTimeIncStr in input:
+                    limits.limited["time"] += (
+                        int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
                     )
 
                 self.search.limit = limits
