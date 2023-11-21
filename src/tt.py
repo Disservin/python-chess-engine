@@ -34,7 +34,7 @@ class TranspositionTable:
 
     # store an entry in the TT
     def storeEntry(
-        self, key: int, depth: int, flag: str, score: int, move: chess.Move, ply: int
+        self, key: int, depth: int, flag: Flag, score: int, move: chess.Move, ply: int
     ) -> None:
         index = self.ttIndex(key)
         entry = self.transposition_table[index]

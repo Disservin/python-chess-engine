@@ -14,35 +14,54 @@ from sys import stdout
 class Search:
     def __init__(self, board: chess.Board) -> None:
         self.board = board
+
+        # This is our transposition table, it stores positions
+        # it is one of the most important parts of a chess engine.
+        # It stores results of previously performed searches and it
+        # allows to skip parts of the search tree and order moves.
         self.transposition_table = TT.TranspositionTable()
-        self.eval = Eval.Evaluation()
 
         self.pvLength = [0] * MAX_PLY
+        # This is our principal variation table, it stores the best
+        # moves for each depth. It is used to print the best line
+        # after the search is completed.
         self.pvTable = [[chess.Move.null()] * MAX_PLY for _ in range(MAX_PLY)]
 
+        # Total nodes searched
         self.nodes = 0
-        self.searchStartTime = 0
 
+        # Current limits for the search
         self.limit = Limits(0, MAX_PLY, 0)
 
+        # True when the search is stopped/aborted
         self.stop = False
+
+        # Time checking is expensive and we dont want to do it every node
         self.checks = CHECK_RATE
 
-        self.hashHistory = []
+        # Keeps track of the zobrist hashes encountered during the search
+        # Used to efficiently detect repetitions
+        self.hashHistory: list[int] = []
 
         # History Table
+        # Indexed by [color][from][to]
         self.htable = [[[0 for x in range(64)] for y in range(64)] for z in range(2)]
 
     def qsearch(self, alpha: int, beta: int, ply: int) -> int:
+        """
+        Quiescence Search, this is a special search that only searches
+        captures and checks. It is needed to avoid the horizon effect.
+        We will continue to search until we reach a quiet position.
+        """
         if self.stop or self.checkTime():
             return 0
 
         # Dont search higher than MAX_PLY
         if ply >= MAX_PLY:
-            return self.eval.evaluate(self.board)
+            return Eval.Evaluation.evaluate(self.board)
 
         # staticEval
-        bestValue = self.eval.evaluate(self.board)
+        bestValue = Eval.Evaluation.evaluate(self.board)
 
         if bestValue >= beta:
             return bestValue
@@ -50,13 +69,15 @@ class Search:
         if bestValue > alpha:
             alpha = bestValue
 
-        # Sort the moves, the highest score should come first
+        # Sort the moves, the highest score should come first,
+        # to reduce the size of the search tree
         moves = sorted(
             self.board.generate_legal_captures(),
             key=lambda move: self.scoreQMove(move),
             reverse=True,
         )
 
+        # Loop over all legal captures
         for move in moves:
             self.nodes += 1
 
@@ -77,6 +98,7 @@ class Search:
             # Unmake move
             self.board.pop()
 
+            # We found a new best value
             if score > bestValue:
                 bestValue = score
 
@@ -89,21 +111,26 @@ class Search:
         return bestValue
 
     def absearch(self, alpha: int, beta: int, depth: int, ply: int) -> int:
+        """
+        Alpha Beta Search, this is the main search function.
+        It searches the tree recursively and returns the best score.
+        This function will be called with increasing depth until
+        the time limit is reached or the maximum depth is reached.
+        """
         if self.checkTime():
             return 0
 
         # Dont search higher than MAX_PLY
         if ply >= MAX_PLY:
-            return self.eval.evaluate(self.board)
+            return Eval.Evaluation.evaluate(self.board)
 
         self.pvLength[ply] = ply
-
         RootNode = ply == 0
-
         hashKey = self.getHash()
 
         if not RootNode:
             if self.isRepetition(hashKey):
+                # slight draw bias
                 return -5
 
             if self.board.halfmove_clock >= 100:
@@ -132,9 +159,7 @@ class Search:
         )
 
         if not RootNode and tte.depth >= depth and ttHit:
-            if tte.flag == TT.Flag.EXACTBOUND:
-                return ttScore
-            elif tte.flag == TT.Flag.LOWERBOUND:
+            if tte.flag == TT.Flag.LOWERBOUND:
                 alpha = max(alpha, ttScore)
             elif tte.flag == TT.Flag.UPPERBOUND:
                 beta = min(beta, ttScore)
@@ -153,7 +178,6 @@ class Search:
             self.board.pop()
 
             if score >= beta:
-
                 if score >= VALUE_TB_WIN_IN_MAX_PLY:
                     score = beta
 
@@ -165,6 +189,7 @@ class Search:
         madeMoves = 0
 
         # Sort the moves, the highest score should come first
+        # The ttMove should be first one searched, incase we have a hit
         moves = sorted(
             self.board.legal_moves,
             key=lambda move: self.scoreMove(move, ttMove),
@@ -221,6 +246,8 @@ class Search:
                         break
 
         # No moves were played so its checkmate or stalemate
+        # Instead checking if the position is a checkmate during evaluate we can do it here
+        # and save computation time
         if madeMoves == 0:
             if inCheck:
                 return mated_in(ply)
@@ -228,7 +255,6 @@ class Search:
                 return 0
 
         # Calculate bound and save position in TT
-
         bound = TT.Flag.NONEBOUND
 
         if bestScore >= beta:
@@ -248,7 +274,11 @@ class Search:
         return bestScore
 
     def iterativeDeepening(self) -> None:
-
+        """
+        Iterative Deepening, this will call the absearch function
+        with increasing depth until the time limit is reached or
+        the maximum depth is reached.
+        """
         self.nodes = 0
 
         score = -VALUE_INFINITE
@@ -277,7 +307,7 @@ class Search:
         if bestmove == chess.Move.null():
             bestmove = self.pvTable[0][0]
 
-        # print bestmove
+        # print bestmove, as per UCI Protocol
         stdout.write("bestmove " + str(bestmove) + "\n")
         stdout.flush()
 
@@ -297,14 +327,14 @@ class Search:
 
     # Most Valuable Victim - Least Valuable Aggressor
     def mvvlva(self, move: chess.Move) -> int:
-        mvvlva = [
+        mvvlva: list[list[int]] = [
             [0, 0, 0, 0, 0, 0, 0],
-            [0, 105.0, 104.0, 103.0, 102.0, 101.0, 100.0],
-            [0, 205.0, 204.0, 203.0, 202.0, 201.0, 200.0],
-            [0, 305.0, 304.0, 303.0, 302.0, 301.0, 300.0],
-            [0, 405.0, 404.0, 403.0, 402.0, 401.0, 400.0],
-            [0, 505.0, 504.0, 503.0, 502.0, 501.0, 500.0],
-            [0, 605.0, 604.0, 603.0, 602.0, 601.0, 600.0],
+            [0, 105, 104, 103, 102, 101, 100],
+            [0, 205, 204, 203, 202, 201, 200],
+            [0, 305, 304, 303, 302, 301, 300],
+            [0, 405, 404, 403, 402, 401, 400],
+            [0, 505, 504, 503, 502, 501, 500],
+            [0, 605, 604, 603, 602, 601, 600],
         ]
 
         from_square = move.from_square
@@ -356,6 +386,8 @@ class Search:
         if (timeNow - self.t0) / 1_000_000 > self.limit.limited["time"]:
             return True
 
+        return False
+
     # Build PV
     def getPV(self) -> str:
         pv = ""
@@ -378,7 +410,7 @@ class Search:
         else:
             return "cp " + str(score)
 
-    # Print uci info
+    # Print UCI Info
     def stats(self, depth: int, score: int, time: int) -> str:
         time_in_ms = int(time / 1_000_000)
         time_in_seconds = max(1, time_in_ms / 1_000)

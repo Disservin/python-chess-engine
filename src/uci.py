@@ -14,7 +14,7 @@ class UCI:
         self.out = stdout
         self.board = chess.Board()
         self.search = Search.Search(self.board)
-        self.thread = None
+        self.thread: Thread | None = None
 
     def output(self, s) -> None:
         self.out.write(str(s) + "\n")
@@ -22,17 +22,19 @@ class UCI:
 
     def stop(self) -> None:
         self.search.stop = True
-        try:
-            self.thread.join()
-        except:
-            pass
+        if self.thread is not None:
+            try:
+                self.thread.join()
+            except:
+                pass
 
     def quit(self) -> None:
         self.search.stop = True
-        try:
-            self.thread.join()
-        except:
-            pass
+        if self.thread is not None:
+            try:
+                self.thread.join()
+            except:
+                pass
 
     def uci(self) -> None:
         self.output("id name python-chess-engine")

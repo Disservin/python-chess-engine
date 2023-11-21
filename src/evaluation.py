@@ -6,7 +6,8 @@ import chess
 
 
 class Evaluation:
-    def eval_side(self, board: chess.Board, color: chess.Color) -> int:
+    @staticmethod
+    def eval_side(board: chess.Board, color: chess.Color) -> int:
         occupied = board.occupied_co[color]
 
         material = 0
@@ -34,5 +35,8 @@ class Evaluation:
 
         return material + psqt
 
-    def evaluate(self, board: chess.Board) -> int:
-        return self.eval_side(board, board.turn) - self.eval_side(board, not board.turn)
+    @staticmethod
+    def evaluate(board: chess.Board) -> int:
+        return Evaluation.eval_side(board, chess.WHITE) - Evaluation.eval_side(
+            board, chess.BLACK
+        )
